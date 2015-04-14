@@ -22,10 +22,11 @@ namespace Scalesque {
         public bool HasValue { get { return !IsEmpty; } }
 
         /// <summary>
-        /// Gets the optional value if it is there or throws exception
+        /// Gets the optional value if it is there or throws exception.
+        /// Internal so that safer methods are forced on the user
         /// </summary>
         /// <returns>T</returns>
-        public abstract T Get();
+        internal abstract T Get();
         
         /// <summary>
         /// Maps the type of an optional value from &lt;T&gt; to a &lt;U&gt;
@@ -37,6 +38,19 @@ namespace Scalesque {
             if (IsEmpty)
                 return None<U>.apply();
             return new Some<U>(f(Get()));
+        }
+
+        /// <summary>
+        /// Maps the type of an optional value from &lt;T&gt; to a &lt;U&gt;
+        /// Safe means that if an exception is encountered, then it will return None
+        /// </summary>
+        /// <typeparam name="U"></typeparam>
+        /// <param name="f"></param>
+        /// <returns></returns>
+        public Option<U> SafeMap<U>(Func<T, U> f) {
+            if (IsEmpty)
+                return None<U>.apply();
+            return Option.safeApply(()=>f(Get()));  
         }
 
         /// <summary>
@@ -114,6 +128,23 @@ namespace Scalesque {
         IEnumerator IEnumerable.GetEnumerator() {
             return GetEnumerator();
         }
+
+        /// <summary>
+        /// More natural pattern matching for Option
+        /// option.Match(
+        ///   Some: x=>fn(x), 
+        ///   None: ()=>fn()
+        /// )
+        /// </summary>
+        /// <typeparam name="R">Result Type</typeparam>
+        /// <param name="Some">Function used if the option is a Some</param>
+        /// <param name="None">Function used if the option is a None</param>
+        /// <returns>The resultant value from the applied function.</returns>
+        public R Match<R>(Func<T, R> Some, Func<R> None) {
+            return HasValue ? Some(Get()): (None == null ? default(R) : None());
+        }
+
+
     }
 
     /// <summary>
@@ -125,7 +156,7 @@ namespace Scalesque {
             get { return true; }
         }
 
-        public override T Get() {
+        internal override T Get() {
             throw new ArgumentNullException("Get called on None");
         }
 
@@ -134,6 +165,19 @@ namespace Scalesque {
         }
 
         private None() {}
+
+        public override string ToString() {
+          return "None";
+        }
+
+        /// <summary>
+        /// Option equality that checks against the two different None types
+        /// </summary>
+        /// <param name="obj">Object to compare this object against</param>
+        /// <returns>True if None, else False</returns>
+        public override bool Equals(object obj) {
+            return Option.IsNone(obj);
+        }
     }
 
     /// <summary>
@@ -151,8 +195,24 @@ namespace Scalesque {
             get { return false; }
         }
 
-        public override T Get() {
+        internal override T Get() {
             return value;
+        }
+
+        public override string ToString() {
+          return "Some(" + value + ")";
+        }
+
+        /// <summary>
+        /// Option equality checks if it is a Some, if so compares the wrapped values
+        /// </summary>
+        /// <param name="obj">Object to compare this object against</param>
+        /// <returns>True if obj is a Some and values are equal, otherwise False</returns>
+        public override bool Equals(object obj) {
+          if (obj == null) return false;
+          if (Option.IsNone(obj)) return false;
+          var objAsSome = obj as Some<T>;
+          return objAsSome != null && value.Equals(objAsSome.value);
         }
     }
 
@@ -160,7 +220,18 @@ namespace Scalesque {
     /// Companion class for Option
     /// </summary>
     public static class Option {
-
+        /// <summary>
+        /// Check whether the given object is a None (comparing against both possibilities)
+        /// </summary>
+        /// <param name="obj">Object to verify</param>
+        /// <returns>True if None, otherwise False</returns>
+        public static Boolean IsNone(Object obj) {
+            if (obj == null)
+                return false;
+            if (obj is None) return true;
+            return typeof(None<>) == obj.GetType().GetGenericTypeDefinition();
+        }
+         
         /// <summary>
         /// Creates an  <see cref="Option{T}"/>.  Result be <see cref="Some{T}"/> if the reference is not null else will be <see cref="None{T}"/>.
         /// </summary>
@@ -171,6 +242,27 @@ namespace Scalesque {
             if (value == null)
                 return None();
             return new Some<T>(value);
+        }
+
+        /// <summary>
+        /// Creates an  <see cref="Option{T}"/>.  Result be <see cref="Some{T}"/> if the reference is not null AND doesn't throw an exception else will be <see cref="None{T}"/>.
+        /// </summary>
+        /// <typeparam name="T"></typeparam>
+        /// <param name="value"></param>
+        /// <returns></returns>
+        public static Option<T> safeApply<T>(Func<T> value) {
+            if (value == null)
+                return None();
+            T val;
+            try {
+                val = value();
+            }
+            catch {
+                return None();
+            }
+            if (val == null)
+                return None();
+            return new Some<T>(val);  
         }
 
         /// <summary>
@@ -199,6 +291,17 @@ namespace Scalesque {
         /// <returns></returns>
         public static IEnumerable<T> Flatten<T>(this IEnumerable<Option<T>> enumerable) {
             return from option in enumerable where option.HasValue select option.Get();
+        }
+
+        /// <summary>
+        /// Returns the first value from the enumerable.
+        /// None if the enumerable is empty
+        /// </summary>
+        /// <typeparam name="T"></typeparam>
+        /// <param name="enumerable"></param>
+        /// <returns></returns>
+        public static Option<T> FirstOption<T>(this IEnumerable<T> enumerable) {
+            return safeApply(()=>enumerable.First());
         }
 
         /// <summary>

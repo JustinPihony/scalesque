@@ -1,4 +1,6 @@
-﻿namespace Scalesque {
+﻿using System;
+
+namespace Scalesque {
 
     /// <summary>
     /// Extractor for Some&lt;T&gt;
@@ -21,6 +23,15 @@
 
         public static bool unapply<T>(Option<T> option) {
             return !option.HasValue;
+        }
+
+        /// <summary>
+        /// Option equality that checks against the two different None types
+        /// </summary>
+        /// <param name="obj">Object to compare this object against</param>
+        /// <returns>True if obj is a None, otherwise False</returns>
+        public override bool Equals(object obj) {
+          return Option.IsNone(obj);
         }
     }
 }

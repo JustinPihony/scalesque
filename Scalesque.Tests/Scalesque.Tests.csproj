@@ -31,6 +31,13 @@
     <ErrorReport>prompt</ErrorReport>
     <WarningLevel>4</WarningLevel>
   </PropertyGroup>
+  <PropertyGroup>
+    <SignAssembly>false</SignAssembly>
+  </PropertyGroup>
+  <PropertyGroup>
+    <AssemblyOriginatorKeyFile>
+    </AssemblyOriginatorKeyFile>
+  </PropertyGroup>
   <ItemGroup>
     <Reference Include="FluentAssertions">
       <HintPath>..\packages\FluentAssertions.1.7.1.1\Lib\net40\FluentAssertions.dll</HintPath>
@@ -53,6 +60,14 @@
     <Compile Include="EitherOr\When_joining_either.cs" />
     <Compile Include="ExceptionCatching\When_catching_exceptions.cs" />
     <Compile Include="FunctionApplication\When_creating_partially_applied_functions.cs" />
+    <Compile Include="Options\When_FirstOption_is_called.cs" />
+    <Compile Include="Options\When_IsNone_is_called.cs" />
+    <Compile Include="Options\When_Match_on_a_None.cs" />
+    <Compile Include="Options\When_Match_on_a_Some.cs" />
+    <Compile Include="Options\When_SafeMap_against_None.cs" />
+    <Compile Include="Options\When_SafeMap_Throws.cs" />
+    <Compile Include="Options\When_an_exception_is_safeApplied.cs" />
+    <Compile Include="Options\When_a_value_is_safeApplied.cs" />
     <Compile Include="Options\When_using_applicative_functors.cs" />
     <Compile Include="Patterns\SomeExampleExtractors.cs" />
     <Compile Include="Patterns\When_doing_more_complicated_extractions.cs" />

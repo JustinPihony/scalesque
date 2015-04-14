@@ -1,0 +1,48 @@
+﻿using System;
+using System.Linq;
+using FluentAssertions;
+using NUnit.Framework;
+
+namespace Scalesque.Options {
+
+    [TestFixture]
+    public class When_an_exception_is_safeApplied : UnitTestBase {
+
+        private Option<string> option;
+        
+        public override void Because() {
+          option = Option.safeApply<String>(() => { throw new Exception(); });
+        }
+
+        [Test]
+        public void It_should_be_none()
+        {
+          option.Should().BeAssignableTo<None<string>>();
+        }
+
+        [Test]
+        [ExpectedException(ExpectedException = typeof(ArgumentNullException))]
+        public void It_should_throw_on_get()
+        {
+          option.Get();
+        }
+
+        [Test]
+        public void It_should_map_to_a_new_type()
+        {
+          option.Map(x => x.Length).Should().BeAssignableTo<None<int>>();
+        }
+
+        [Test]
+        public void It_should_return_the_else()
+        {
+          option.GetOrElse(() => "mee!").Should().Be("mee!");
+        }
+
+        [Test]
+        public void It_should_return_the_other()
+        {
+          option.FlatMap<int>(x => Option.apply(1)).Should<int>().BeAssignableTo<None<int>>();
+        }
+    }
+}
