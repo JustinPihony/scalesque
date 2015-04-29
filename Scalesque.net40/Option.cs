@@ -144,7 +144,45 @@ namespace Scalesque {
             return HasValue ? Some(Get()): (None == null ? default(R) : None());
         }
 
+        /// <summary>
+        /// More natural pattern matching for Option
+        /// option.Match(
+        ///   Some: x=>fn(x), 
+        ///   None: ()=>fn()
+        /// )
+        /// with no return type
+        /// </summary>
+        /// <param name="Some">Function used if the option is a Some</param>
+        /// <param name="None">Function used if the option is a None</param>
+        public void Match(Action<T> Some, Action None)
+        {
+          Match<Unit>(
+            Some: x =>
+            {
+              Some(x);
+              return Unit.Value;
+            },
+            None: () =>
+            {
+              None();
+              return Unit.Value;
+            });
+        }
 
+        /// <summary>
+        /// Apply the given method to the option's value, if it is nonempty. Otherwise, do nothing.
+        /// </summary>
+        /// <param name="ifSome">Action to perform if there is a value (Some)</param>
+        public void ForEach(Action<T> ifSome)
+        {
+          Match<Unit>(
+            Some: x =>
+            {
+              ifSome(x);
+              return Unit.Value;
+            },
+            None: () => Unit.Value);
+        }
     }
 
     /// <summary>
