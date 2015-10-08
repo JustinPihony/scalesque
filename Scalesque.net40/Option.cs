@@ -339,7 +339,7 @@ namespace Scalesque {
         /// <param name="enumerable"></param>
         /// <returns></returns>
         public static Option<T> FirstOption<T>(this IEnumerable<T> enumerable) {
-            return safeApply(()=>enumerable.First());
+            return safeApply(()=> enumerable.FirstOrDefault());
         }
 
         /// <summary>
